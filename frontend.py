@@ -1,9 +1,9 @@
 import streamlit as st 
-from backend import chatbot
+from backend import chatbot,retrieve_all_threads
 from langchain_core.messages import HumanMessage
 import uuid
 
-##    utility function
+##  -------------  utility function
 def generate_thread_id():
     thread_id=uuid.uuid4()
     return thread_id
@@ -31,7 +31,7 @@ def load_conversation(thread_id):
 
     return state.values.get('messages', [])
 
-#    session setup
+#   ---------- session setup
 if 'messages_history' not in st.session_state:
     st.session_state['messages_history']=[]
 
@@ -39,12 +39,12 @@ if 'thread_id' not in st.session_state:
     st.session_state['thread_id']=generate_thread_id()
 
 if 'chat_threads' not in st.session_state:
-    st.session_state['chat_threads']=[]
+    st.session_state['chat_threads']=retrieve_all_threads()
 
 add_thread(st.session_state['thread_id'])
 CONFIG={'configurable':{'thread_id':st.session_state['thread_id']}}
 
-#   sidebar ui
+#   ---------------- sidebar ui
 st.sidebar.title('LangGraph Chatbot')
 if st.sidebar.button('New Chat'):
     reset_chat()

@@ -1,11 +1,12 @@
 from langgraph.graph import START,END,StateGraph
 from langchain_groq import ChatGroq
 from langchain_core.messages import BaseMessage,HumanMessage
-from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph.message import add_messages
 from dotenv import load_dotenv
 import os
 from typing import TypedDict, Annotated
+import sqlite3
 
 load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
@@ -25,9 +26,9 @@ def chat_node(state:ChatState):
 
     return {'messages':[response]}
 
-
+conn=sqlite3.connect(database='chatbot.db',check_same_thread=False)
 #checkpointer
-checkpointer=InMemorySaver()
+checkpointer=SqliteSaver(conn=conn)
 
 # create the graph
 graph=StateGraph(ChatState)
@@ -40,3 +41,13 @@ graph.add_edge(START,'chat_node')
 graph.add_edge('chat_node',END)
 
 chatbot=graph.compile(checkpointer=checkpointer)
+
+def retrieve_all_threads():
+
+    all_threads = set()
+
+    for checkpoint in checkpointer.list(None):
+        thread_id = checkpoint.config['configurable']['thread_id']
+        all_threads.add(thread_id)
+
+    return list(all_threads)
